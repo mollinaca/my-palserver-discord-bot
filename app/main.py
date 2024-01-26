@@ -1,8 +1,10 @@
 #!/usr/bin/env python3
 import os
+import time
 
 import discord as d
 import dotenv
+from google.cloud import compute_v1
 
 dotenv.load_dotenv()
 
@@ -15,30 +17,10 @@ def pip_freeze():
     exit(0)
 
 
-def gcp_show_instances():
-    # https://cloud.google.com/compute/docs/api/libraries?hl=ja
-    from google.cloud import compute_v1
-
-    project = "mollinaca-development"
-    zone = "asia-east1-b"
-
-    instance_client = compute_v1.InstancesClient()
-    instance_list = instance_client.list(project=project, zone=zone)
-
-    print(f"Instances found in zone {zone}:")
-    for instance in instance_list:
-        print(f" - {instance.name} ({instance.machine_type})")
-
-    return instance_list
-
-
 def get_pal2_instance_status():
-    # https://cloud.google.com/compute/docs/api/libraries?hl=ja
-    from google.cloud import compute_v1
-
-    project = "mollinaca-development"
-    zone = "asia-east1-b"
-    instance_name = "pal2"
+    project = os.getenv("GCP_PROJECT")
+    zone = os.getenv("GCP_ZONE")
+    instance_name = os.getenv("GCE_INSTANCE_NAME")
 
     instance_client = compute_v1.InstancesClient()
     instance = instance_client.get(project=project, zone=zone, instance=instance_name)
@@ -47,12 +29,9 @@ def get_pal2_instance_status():
 
 
 def get_pal2_instance_externalip():
-    # https://cloud.google.com/compute/docs/api/libraries?hl=ja
-    from google.cloud import compute_v1
-
-    project = "mollinaca-development"
-    zone = "asia-east1-b"
-    instance_name = "pal2"
+    project = os.getenv("GCP_PROJECT")
+    zone = os.getenv("GCP_ZONE")
+    instance_name = os.getenv("GCE_INSTANCE_NAME")
 
     instance_client = compute_v1.InstancesClient()
     instance = instance_client.get(project=project, zone=zone, instance=instance_name)
@@ -61,12 +40,9 @@ def get_pal2_instance_externalip():
 
 
 def start_pal2():
-    # https://cloud.google.com/compute/docs/api/libraries?hl=ja
-    from google.cloud import compute_v1
-
-    project = "mollinaca-development"
-    zone = "asia-east1-b"
-    instance_name = "pal2"
+    project = os.getenv("GCP_PROJECT")
+    zone = os.getenv("GCP_ZONE")
+    instance_name = os.getenv("GCE_INSTANCE_NAME")
 
     instance_client = compute_v1.InstancesClient()
     operation = instance_client.start(
@@ -78,12 +54,9 @@ def start_pal2():
 
 
 def stop_pal2():
-    # https://cloud.google.com/compute/docs/api/libraries?hl=ja
-    from google.cloud import compute_v1
-
-    project = "mollinaca-development"
-    zone = "asia-east1-b"
-    instance_name = "pal2"
+    project = os.getenv("GCP_PROJECT")
+    zone = os.getenv("GCP_ZONE")
+    instance_name = os.getenv("GCE_INSTANCE_NAME")
 
     instance_client = compute_v1.InstancesClient()
     operation = instance_client.stop(project=project, zone=zone, instance=instance_name)
@@ -118,29 +91,73 @@ def discord_bot():
     async def on_message(message):
         if message.author.bot:
             return
-        if message.content == "/bot-test":
-            await message.channel.send("Hello!")
+        if message.content == "/PalServer bot-test":
+            await message.channel.send("bot-test だよ. Hello!")
         if message.content == "/PalServer help":
             await message.channel.send(bot_help)
         if message.content == "/PalServer start":
             await message.channel.send(
-                "PalServer を起動するよ ※この機能はまだ実装されていません"
+                "PalServer を起動するよ。１分ぐらい待ってね。 ※この機能はまだ実装されていません"
             )
             # 起動処理
-            # start_pal2
+            # start_pal2()
+            time.sleep(60)
             # IP アドレスを取得して表示する
+            res = get_pal2_instance_status()
+            # # test
+            # res = "STOP"
+            if res == "RUNNING":
+                nat_ip = get_pal2_instance_externalip()
+                await message.channel.send(f"{nat_ip}:8211")
+            else:
+                time.sleep(60)
+                # # test
+                # res = "STOP"
+                if res == "RUNNING":
+                    nat_ip = get_pal2_instance_externalip()
+                    await message.channel.send(f"{nat_ip}:8211")
+                else:
+                    await message.channel.send(
+                        "PalServer を起動しようとしたけどうまくできてないかも。 \nもう1分待って `/PalServer status` を確認してみて。それでもだめならなんか問題が起きてるかも。"
+                    )
+
         if message.content == "/PalServer stop":
             await message.channel.send(
                 "PalServer を停止するよ ※この機能はまだ実装されていません"
             )
             # 停止処理
+            # stop_pal2()
+            time.sleep(60)
+            res = get_pal2_instance_status()
+            if res == "STOP":
+                await message.channel.send("PalServer を停止したよ。また遊んでね。")
+            else:
+                await message.channel.send(
+                    "PalServer はまだ停止していないみたい。ほっといていいよ。"
+                )
+
         if message.content == "/PalServer restart":
             await message.channel.send(
                 "PalServer を再起動するよ ※この機能はまだ実装されていません"
             )
             # 停止処理
+            # stop_pal2()
             # 起動処理
+            # start_pal2()
             # IP アドレスを取得して表示する
+            res = get_pal2_instance_status()
+            if res == "RUNNING":
+                nat_ip = get_pal2_instance_externalip()
+                await message.channel.send(f"{nat_ip}:8211")
+            else:
+                time.sleep(60)
+                if res == "RUNNING":
+                    nat_ip = get_pal2_instance_externalip()
+                    await message.channel.send(f"{nat_ip}:8211")
+                else:
+                    await message.channel.send(
+                        "PalServer を起動しようとしたけどうまくできてないかも。 \nもう1分待って /PalServer status を確認してみて。それでもだめならなんか問題が起きてるかも。"
+                    )
 
         if message.content == "/PalServer status":
             res = get_pal2_instance_status()
