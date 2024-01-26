@@ -91,28 +91,27 @@ def discord_bot():
     async def on_message(message):
         if message.author.bot:
             return
+
         if message.content == "/PalServer bot-test":
             await message.channel.send("bot-test だよ. Hello!")
+
         if message.content == "/PalServer help":
             await message.channel.send(bot_help)
+
         if message.content == "/PalServer start":
             await message.channel.send(
-                "PalServer を起動するよ。１分ぐらい待ってね。 ※この機能はまだ実装されていません"
+                "PalServer を起動するよ。１分ぐらい待ってね。 ※この機能はテストされてないので、うまく動かなかったらゴメン"
             )
             # 起動処理
-            # start_pal2()
+            start_pal2()
             time.sleep(60)
             # IP アドレスを取得して表示する
             res = get_pal2_instance_status()
-            # # test
-            # res = "STOP"
             if res == "RUNNING":
                 nat_ip = get_pal2_instance_externalip()
                 await message.channel.send(f"{nat_ip}:8211")
             else:
                 time.sleep(60)
-                # # test
-                # res = "STOP"
                 if res == "RUNNING":
                     nat_ip = get_pal2_instance_externalip()
                     await message.channel.send(f"{nat_ip}:8211")
@@ -123,10 +122,10 @@ def discord_bot():
 
         if message.content == "/PalServer stop":
             await message.channel.send(
-                "PalServer を停止するよ ※この機能はまだ実装されていません"
+                "PalServer を停止するよ ※この機能はテストされてないので、うまく動かなかったらゴメン"
             )
             # 停止処理
-            # stop_pal2()
+            stop_pal2()
             time.sleep(60)
             res = get_pal2_instance_status()
             if res == "STOP":
@@ -141,9 +140,10 @@ def discord_bot():
                 "PalServer を再起動するよ ※この機能はまだ実装されていません"
             )
             # 停止処理
-            # stop_pal2()
+            stop_pal2()
+            time.sleep(60)
             # 起動処理
-            # start_pal2()
+            start_pal2()
             # IP アドレスを取得して表示する
             res = get_pal2_instance_status()
             if res == "RUNNING":
