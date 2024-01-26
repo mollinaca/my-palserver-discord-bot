@@ -1,0 +1,9 @@
+version: '3'
+services:
+  discord-bot-sample:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    volumes:
+      - ./app:/app
+    command: python main.py   
