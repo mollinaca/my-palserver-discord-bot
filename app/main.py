@@ -49,7 +49,6 @@ def start_pal2():
         project=project, zone=zone, instance=instance_name
     )
     operation.result()
-    print(operation.result())
     return operation.result()
 
 
@@ -61,7 +60,6 @@ def stop_pal2():
     instance_client = compute_v1.InstancesClient()
     operation = instance_client.stop(project=project, zone=zone, instance=instance_name)
     operation.result()
-    print(operation.result())
     return operation.result()
 
 
@@ -99,9 +97,7 @@ def discord_bot():
             await message.channel.send(bot_help)
 
         if message.content == "/PalServer start":
-            await message.channel.send(
-                "PalServer を起動するよ。１分ぐらい待ってね。 ※この機能はテストされてないので、うまく動かなかったらゴメン"
-            )
+            await message.channel.send("PalServer を起動するよ。１分ぐらい待ってね。")
             # 起動処理
             start_pal2()
             time.sleep(60)
@@ -121,14 +117,12 @@ def discord_bot():
                     )
 
         if message.content == "/PalServer stop":
-            await message.channel.send(
-                "PalServer を停止するよ ※この機能はテストされてないので、うまく動かなかったらゴメン"
-            )
+            await message.channel.send("PalServer を停止するよ")
             # 停止処理
             stop_pal2()
             time.sleep(60)
             res = get_pal2_instance_status()
-            if res == "STOP":
+            if res == "TERMINATED":
                 await message.channel.send("PalServer を停止したよ。また遊んでね。")
             else:
                 await message.channel.send(
@@ -136,27 +130,26 @@ def discord_bot():
                 )
 
         if message.content == "/PalServer restart":
-            await message.channel.send(
-                "PalServer を再起動するよ ※この機能はまだ実装されていません"
-            )
-            # 停止処理
-            stop_pal2()
-            time.sleep(60)
-            # 起動処理
+            await message.channel.send("PalServer を再起動するよ。ちょっとまっててね。")
+            status = get_pal2_instance_status()
+            if status == "RUNNING":
+                stop_pal2()
+                time.sleep(60)
+
             start_pal2()
-            # IP アドレスを取得して表示する
-            res = get_pal2_instance_status()
-            if res == "RUNNING":
+            time.sleep(60)
+            status = get_pal2_instance_status()
+            if status == "RUNNING":
                 nat_ip = get_pal2_instance_externalip()
                 await message.channel.send(f"{nat_ip}:8211")
             else:
                 time.sleep(60)
-                if res == "RUNNING":
+                if status == "RUNNING":
                     nat_ip = get_pal2_instance_externalip()
                     await message.channel.send(f"{nat_ip}:8211")
                 else:
                     await message.channel.send(
-                        "PalServer を起動しようとしたけどうまくできてないかも。 \nもう1分待って /PalServer status を確認してみて。それでもだめならなんか問題が起きてるかも。"
+                        "PalServer を起動しようとしたけどうまくできてないかも。 \nもう1分待って `/PalServer status` を確認してみて。それでもだめならなんか問題が起きてるかも。"
                     )
 
         if message.content == "/PalServer status":
