@@ -4,7 +4,7 @@ import time
 
 import discord as d
 import dotenv
-from google.cloud import compute_v1
+from google.cloud import billing_v1, compute_v1
 
 dotenv.load_dotenv()
 
@@ -61,6 +61,27 @@ def stop_pal2():
     operation = instance_client.stop(project=project, zone=zone, instance=instance_name)
     operation.result()
     return operation.result()
+
+
+def get_current_month_cost():
+    import datetime
+
+    project = os.getenv("GCP_PROJECT")
+    zone = os.getenv("GCP_ZONE")
+    instance_name = os.getenv("GCE_INSTANCE_NAME")
+
+    client = billing_v1.BillingClient()
+
+    cost_usage_start_time = datetime.datetime.now().replace(
+        day=1, hour=0, minute=0, second=0, microsecond=0
+    )
+    cost_usage_end_time = datetime.datetime.now()
+
+    cost_usage_result = client.get_cost_usage(
+        project, cost_usage_start_time, cost_usage_end_time
+    )
+
+    return cost_usage_result.total_cost
 
 
 def discord_bot():
@@ -160,9 +181,8 @@ def discord_bot():
                 await message.channel.send(f"{nat_ip}:8211")
 
         if message.content == "/PalServer costs":
-            await message.channel.send(
-                "今月現時点での月額請求額は : <> だよ ※この機能はまだ実装されていません"
-            )
+            cost = get_current_month_cost()
+            await message.channel.send(f"今月現時点での月額請求額は : {cost} だよ")
 
         if message.content == "/PalServer ipaddress":
             res = get_pal2_instance_externalip()
